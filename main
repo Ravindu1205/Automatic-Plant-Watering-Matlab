@@ -1,0 +1,36 @@
+figure
+h = animatedline;
+ax = gca;
+ax.YGrid = 'on';
+ax.YLim = [-0.1 5];
+title('voltage vs time (live)');
+xlabel('Time [HH:MM:SS]');
+ylabel('Voltage [volt]');
+stop = false;
+startTime = datetime('now');
+while ~stop
+% Read current voltage value
+voltage = readVoltage(a,'A0');
+% Get current time
+t = datetime('now') - startTime;
+% Add points to animation
+addpoints(h,datenum(t),voltage)
+% Update axes
+ax.XLim = datenum([t-seconds(15) t]);
+datetick('x','keeplimits')
+drawnow
+voltage = readVoltage(a,'A0')
+if (voltage >= 3.40)
+disp("State = 'dry soil, add water'")
+writeDigitalPin(a,'D2',1)
+elseif ((3.40 > voltage) > 2.73)
+disp("State = 'Not too dry, add a little water'")
+writeDigitalPin(a,'D2',1)
+else
+disp("State = 'Wet soil, don't add water'")
+writeDigitalPin(a,'D2',0)
+end
+
+% Check stop condition (check the button on D6)
+stop = readDigitalPin(a,'D6');
+end
